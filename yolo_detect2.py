@@ -32,12 +32,13 @@ configPath = os.path.sep.join([args["yolo"], "yolov3.cfg"])
 
 net = cv2.dnn.readNetFromDarknet(configPath, weightsPath)
 
-path=r'/home/shubhankar/Desktop/yoloDetect/vid2.mp4'
+path=r'/home/shubhankar/Desktop/yoloDetect/vid3.mp4'
 vidObj = cv2.VideoCapture(path) 
 frameRate = vidObj.get(5)
 
 
 uniqueObj=set()
+objToCall=set()
 def detect(image):
 	(H, W) = image.shape[:2]
 
@@ -53,7 +54,7 @@ def detect(image):
 	layerOutputs = net.forward(ln)
 	end = time.time()
 	
-	print("YOLO took {:.6f} seconds".format(end - start))
+	# print("YOLO took {:.6f} seconds".format(end - start))
 	
 	
 	boxes = []
@@ -75,7 +76,11 @@ def detect(image):
 	for i in classIDs:
 		uniqueObj.add(LABELS[i])
 
-	print(uniqueObj)
+
+	print(uniqueObj-objToCall)
+	print("")
+
+	objToCall.update(uniqueObj)
 	uniqueObj.clear()
 
 
@@ -89,15 +94,21 @@ while vidObj.isOpened():
 	frameId = vidObj.get(1)
 	if success == False :
 		break
+	cv2.imshow('Frame',frame)
+	if cv2.waitKey(25) & 0xFF == ord('q'):
+		break
+
 
 	if frameId % (math.floor(frameRate)*2) == 0:
 		# cv2.imshow('Frame',frame)
-		print(frameId)
+		# print(objToCall)
 		detect(frame)
-		if cv2.waitKey(25) & 0xFF == ord('q'):
-			break
+	if frameId % (math.floor(frameRate)*24) == 0:
+		objToCall.clear()
+		print("clear")
 
 vidObj.release()
+cv2.waitKey(0)
 cv2.destroyAllWindows()
 
 
