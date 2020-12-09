@@ -4,6 +4,12 @@ import argparse
 import time
 import cv2
 import os
+from gtts import gTTS
+from time import sleep
+import os
+import pyglet
+
+
 
 
 
@@ -37,6 +43,19 @@ vidObj = cv2.VideoCapture(path)
 frameRate = vidObj.get(5)
 
 
+
+def speak(text):
+	tts = gTTS(text=text, lang='en',slow=False)
+	filename = '/tmp/temp.mp3'
+	tts.save(filename)
+
+	music = pyglet.media.load(filename, streaming=False)
+	music.play()
+	sleep(music.duration) 
+	os.remove(filename) 
+
+
+
 uniqueObj=set()
 objToCall=set()
 def detect(image):
@@ -54,10 +73,9 @@ def detect(image):
 	layerOutputs = net.forward(ln)
 	end = time.time()
 	
-	# print("YOLO took {:.6f} seconds".format(end - start))
+	# print("took {:.6f} secs".format(end - start))
 	
 	
-	boxes = []
 	confidences = []
 	classIDs = []
 	
@@ -77,8 +95,17 @@ def detect(image):
 		uniqueObj.add(LABELS[i])
 
 
-	print(uniqueObj-objToCall)
-	print("")
+	setToSpeak=uniqueObj-objToCall
+	toSpeak="detected"
+	if setToSpeak:
+		speak("detected")
+	for i in setToSpeak:
+		if i != "car":
+			toSpeak=toSpeak+" "+i
+			speak(i)
+	if(toSpeak != "detected"):
+		print(toSpeak)
+		# speak(toSpeak)
 
 	objToCall.update(uniqueObj)
 	uniqueObj.clear()
@@ -94,7 +121,7 @@ while vidObj.isOpened():
 	frameId = vidObj.get(1)
 	if success == False :
 		break
-	cv2.imshow('Frame',frame)
+	# cv2.imshow('Frame',frame)
 	if cv2.waitKey(25) & 0xFF == ord('q'):
 		break
 
